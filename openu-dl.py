@@ -17,11 +17,8 @@ import re
 import os
 from libmimms2 import core as mimms2
 
+# TODO: Param with get-opts.
 MAX_TRIES = 3
-__MENCODER = "mencoder -forceidx %(dl_target)s -o %(target)s -oac mp3lame -ovc copy -ofps 60"
-
-# TODO: Search course id by simester.
-__VLAB_ID = "http://opal.openu.ac.il/mod/ouvideo/view.php?id=3540927"
 
 class OpenUCrawler(object):
     __MMS_RE = re.compile("(mms://.+)'")
@@ -69,14 +66,6 @@ class OpenUCrawler(object):
         req = urllib2.Request(self.__LOGIN_FORM, data)
         resp = urllib2.urlopen(req).read()
         assert "alert" not in resp, "Wrong Username/Password/ID (T.Z) Provided"
-
-        # Next, Open the url provided
-        try:
-            self.__read_page(self.__NEXT_PAGE_RE.findall(resp)[0])
-            assert 0, "We should get 404 error.."
-        except urllib2.HTTPError, e:
-            if e.code != 404:
-                raise
 
     def __get_courses(self, semester):
         """
@@ -213,11 +202,13 @@ class Downloader(object):
         return self._target
 
 class Mencoder(object):
+    __MENCODER = "mencoder -forceidx %(dl_target)s -o %(target)s -oac mp3lame -ovc copy -ofps 60"
+
     def __init__(self, source, dest, delete=True):
         self._source = source
         self._dest = dest
         self._del = delete
-        self._cmd = __MENCODER % {"target": self._dest, "dl_target": self._source}
+        self._cmd = self.__MENCODER % {"target": self._dest, "dl_target": self._source}
 
     def start(self):
         print "Fixing encoding... (%s => %s)" % (self._source, self._dest)
@@ -253,6 +244,7 @@ def main():
     ## TODO: Get opts library
     if len(sys.argv) != 7:
         print "Usage: %s <threads> <openu-user> <openu-password> <openu-id (T.Z)> <openu-semester> <openu-course>" % sys.argv[0]
+        print "Example: %s 30 uberuser Pass123 123456789 2015a 20301" % sys.argv[0]
         return -1
 
     _, threads, user, password, iden, semester, course = sys.argv
@@ -261,7 +253,7 @@ def main():
     craweler = OpenUCrawler(user, password, iden)
     videos = craweler.get_videos(semester, course)
 
-    ## TODO: Filter videos
+    ## TODO: Menu to Filter videos
 
     # Read the MMS Out of the relevant vidoes
     videos = craweler.videos_to_mms(videos)
