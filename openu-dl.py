@@ -24,7 +24,6 @@ class OpenUCrawler(object):
     __MMS_RE = re.compile("(mms://.+)'")
     __SEMESTER_RE = re.compile("^(\d{4}[abc])$")
     __COURSE_OPT_RE = re.compile("<option value='(http://.+?)'>.+?\((\d+?)\)</option>")
-    __NEXT_PAGE_RE = re.compile("url=(http.+)\"")
     __VIDEOS_LINK_RE = re.compile("href=\"(http:\/\/opal\.openu\.ac\.il\/mod\/ouvideo\/view\.php\?id=\d+)\"")
     __VIDEOS_RE_BASE = "href=\"(\/video\/redirect.php\?v=%(semester)s/.+?\.asx&c=c%(course)s)\""
     __UNAUTH_STR = "<form action=\"http://opal.openu.ac.il/index.php\" method=\"get\">"
