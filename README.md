@@ -3,7 +3,7 @@
 Requirments:
 ------------
   * python >= 2.7 (python3 is not supported)
-   * libmimms2 requirments:
+  * libmimms2 requirments:
     * python-progressbar - <https://pypi.python.org/pypi/progressbar/2.3-dev>
     * libmms (>= 0.4) - <http://sourceforge.net/projects/libmms>
   * mencoder - <https://help.ubuntu.com/community/mencoder>
