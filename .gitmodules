@@ -1,0 +1,3 @@
+[submodule "mimms2"]
+	path = mimms2
+	url = https://github.com/itayperl/mimms2.git
