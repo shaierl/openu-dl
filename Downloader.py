@@ -10,6 +10,7 @@ __ORG_PATH = sys.path[:]
 __CUR_DIR = os.path.split(__file__)[0]
 sys.path.append(os.path.join(__CUR_DIR, "mimms2"))
 from libmimms2 import core as mimms2
+from libmimms2.libmms import Error as LibmmsError
 sys.path = __ORG_PATH
 
 class Downloader(object):
@@ -34,7 +35,7 @@ class Downloader(object):
         while True:
             try:
                 return mimms2.download_threaded(self._mms_url, self._bw, self._filename, conn_count=self._threads, verbose=self._verbose)
-            except AssertionError, e:
+            except (AssertionError, LibmmsError) as e:
                 tries += 1
                 print "Failed, to download (%d out of %d)" % (tries, self._retries)
                 os.unlink(self._filename)
@@ -42,6 +43,7 @@ class Downloader(object):
                     raise
         return True
 
+    # Properties to satify mimms2 get_filename.
     @property
     def filename(self):
         return self._filename
