@@ -1,5 +1,11 @@
 # Open-u courses video downloader (And Encoder)
 
+Important Note:
+---------------
+The Usage of this script is intended for perosnal usage only!
+All the copyrights of the videos are belongs to Open-U
+The Downloaded videos should not be shared!
+
 Requirments:
 ------------
   * python >= 2.7 (python3 is not supported)
