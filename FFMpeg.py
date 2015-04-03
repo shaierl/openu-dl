@@ -16,7 +16,7 @@ class FFMpeg(object):
     __PROG_RE = re.compile("time=(.+?)\s")
     __FFMPEG_PROCESS = "ffmpeg"
     __FFMPEG = '%s -i %%(dl_target)s -c copy %%(target)s'  % __FFMPEG_PROCESS
-    __PBAR_WIDGETS = ['Downloading: ', progressbar.Percentage(), ' ', progressbar.Bar(),
+    __PBAR_WIDGETS = ['Encoding: ', progressbar.Percentage(), ' ', progressbar.Bar(),
                     ' ', progressbar.ETA()]
 
     def __init__(self, source, dest, verbose=True):

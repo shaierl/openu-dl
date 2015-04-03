@@ -3,32 +3,37 @@
 # This script will login to OpenU to pull a video from it.
 ##
 # Requirments:
-# Python2 >= 2.7
-# libmimms2 (https://github.com/itayperl/mimms2)
-#   (note the library requirments)
-# mencoder installed.
+#   python >= 2.7 (python3 is not supported)
+#   python-progressbar - <https://pypi.python.org/pypi/progressbar/2.3-dev>
+#   ffmpeg - <https://help.ubuntu.com/community/FFmpeg>
 ################################################################################
 
 import sys
 import os
+import shutil
 
 from OpenUCrawler import OpenUCrawler
 from FFMpeg import FFMpeg
+from M3UDownloader import M3UDownloader
 
 def download_all(videos):
-    for fname, mms_url in videos:
+    for fname, video_url in videos:
         # TODO: Remove this after file selection menu.
         if os.path.isfile(fname):
             continue
 
         print "Processing %s" % fname
-        # TODO: Write multi-threaded downloader,
-        # First download all chunks to disc, then use FFMpeg to contain them
-        # into one file.
 
-        # Downloading the file
-        d = FFMpeg(mms_url, fname)
+        # Downloading the files
+        m = M3UDownloader(video_url, "%s_files" % fname)
+        m.start()
+
+        # Encode to one container
+        d = FFMpeg(m.index_file, fname)
         d.start()
+
+        # Remove left overs
+        shutil.rmtree(m.target_dir)
 
     return 0
 

@@ -10,6 +10,7 @@ import re
 from urlparse import urljoin
 
 class OpenUCrawler(object):
+    __MAX_RETRIES = 10
     __MEDIA_RE = re.compile("location=\"(.+?)\";")
     __BANDWIDTH_RE = re.compile("(chunklist_b(\d+)\.m3u8)")
     __SEMESTER_RE = re.compile("^(\d{4}[abc])$")
@@ -102,9 +103,21 @@ class OpenUCrawler(object):
 
     def __read_page(self, url):
         """ Reads target url """
+        # Setup a request, and set UA.
         req = urllib2.Request(url)
         req.add_unredirected_header('User-Agent', self.__UA)
-        return urllib2.urlopen(req).read()
+
+        # Fetch with retry system.
+        tries = 0
+        while True:
+            try:
+                tries += 1
+                return urllib2.urlopen(req).read()
+            except urllib2.HTTPError, e:
+                if tries < self.__MAX_RETRIES:
+                    continue
+                print "Failed to read %s" % url
+                raise
 
     def player_url_to_media(self, player_url):
         """
