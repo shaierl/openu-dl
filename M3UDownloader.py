@@ -23,6 +23,8 @@ class M3UDownloader(object):
         self.__verbose = verbose
         self.__max_threads = threads
 
+        print "Preparing to Download %s to %s" % (self.__target_url, self.__target_dir)
+
         # Prepare empty directory
         self.__prepare_directory()
 

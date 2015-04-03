@@ -50,7 +50,7 @@ class FFMpeg(object):
     def start(self):
         "Start the FFMpeg process"
 
-        print "Downloading and converting... (%s => %s)" % (self._source, self._dest)
+        print "converting... (%s => %s)" % (self._source, self._dest)
 
         # Verbosity of progress bar
         if self._verbose:
