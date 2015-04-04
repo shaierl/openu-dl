@@ -16,7 +16,7 @@ from OpenUCrawler import OpenUCrawler
 from FFMpeg import FFMpeg
 from M3UDownloader import M3UDownloader
 
-def download_all(videos):
+def download_all(threads, videos):
     for fname, video_url in videos:
         # TODO: Remove this after file selection menu.
         if os.path.isfile(fname):
@@ -25,7 +25,7 @@ def download_all(videos):
         print "Processing %s" % fname
 
         # Downloading the files
-        m = M3UDownloader(video_url, "%s_files" % fname)
+        m = M3UDownloader(video_url, "%s_files" % fname, threads)
         m.start()
 
         # Encode to one container
@@ -39,12 +39,13 @@ def download_all(videos):
 
 def main():
     ## TODO: Get opts library
-    if len(sys.argv) != 6:
-        print "Usage: %s <openu-user> <openu-password> <openu-id (T.Z)> <openu-semester> <openu-course>" % sys.argv[0]
+    if len(sys.argv) != 7:
+        print "Usage: %s <threads> <openu-user> <openu-password> <openu-id (T.Z)> <openu-semester> <openu-course>" % sys.argv[0]
         print "Example: %s 30 uberuser Pass123 123456789 2015a 20301" % sys.argv[0]
         return -1
 
-    _, user, password, iden, semester, course = sys.argv
+    _, threads, user, password, iden, semester, course = sys.argv
+    threads = int(threads)
 
     # Makes sure mencoder is installed.
     FFMpeg.check_assert()
@@ -60,7 +61,7 @@ def main():
 
     ## TODO: Do it with a Queue?
     # Download one by one
-    return download_all(videos)
+    return download_all(threads, videos)
 
 if __name__ == "__main__":
     main()
