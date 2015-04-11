@@ -6,6 +6,10 @@
 import threading
 import urllib2
 import socket
+import os
+import httplib
+from urlparse import urlparse
+from contextlib import closing
 
 class DownloaderThread(threading.Thread):
     def __init__(self, target_url, target_file, chunk_size=8192, max_retries=5, timeout=5):
@@ -15,9 +19,12 @@ class DownloaderThread(threading.Thread):
         self.__chunk_size = chunk_size
         self.__max_retries = max_retries
         self.__timeout = 5
-        self.__presentage = 0
         self.__running = True
         self.__started = False
+        self.__prepared = False
+        self.__target_size = 0
+        self.__file_size = 0
+        self.__downloaded_size = 0
 
         # Init Thread
         super(DownloaderThread, self).__init__()
@@ -30,6 +37,8 @@ class DownloaderThread(threading.Thread):
 
     def run(self):
         """ Main of the thread """
+        assert self.__prepared, "Downloader was not prepared"
+
         if not self.__running:
             return
 
@@ -45,6 +54,43 @@ class DownloaderThread(threading.Thread):
         self.__running = False
         self.join()
 
+    def prepare(self):
+        """ Prepare the download thread by getting target size and local size """
+
+        # Read Real url and Target size
+        self.__target_url, self.__target_size = self.__read_file_size(self.__target_url)
+
+        # Check if local file exists
+        self.__file_size = 0
+        if os.path.isfile(self.__target_file):
+            self.__file_size = os.stat(self.__target_file).st_size
+
+        self.__missing_size = self.__target_size - self.__file_size
+        if 0 == self.__missing_size:
+            # Skip downlodaing of this file
+            self.__started = True
+            self.__running = False
+
+        self.__downloaded_size = self.__file_size
+        assert self.__missing_size >= 0, "Negative bytes to download???"
+        self.__prepared = True
+
+    def __read_file_size(self, url):
+        """ Sends HEAD request to retrieve file size """
+
+        # Read headers
+        p = urlparse(url)
+        conn = httplib.HTTPConnection(p.netloc)
+        conn.request("HEAD", p.path)
+        res = conn.getresponse()
+
+        # Check for redirect
+        loc = res.getheader("Location")
+        if loc:
+            return self.__read_file_size(loc)
+
+        return (url, int(res.getheader("Content-Length")))
+
     @property
     def is_running(self):
         if not self.__started:
@@ -58,7 +104,17 @@ class DownloaderThread(threading.Thread):
 
     @property
     def presentage(self):
-        return self.__presentage
+        assert self.__prepared, "Downloader was not prepared"
+        return (self.downloaded * 100) / self.__total_size
+
+    @property
+    def downloaded(self):
+        return self.__downloaded_size
+
+    @property
+    def total_size(self):
+        assert self.__prepared, "Downloader was not prepared"
+        return self.__target_size
 
     @property
     def exception(self):
@@ -88,11 +144,17 @@ class DownloaderThread(threading.Thread):
         """ Download operation """
 
         # Open a request
-        resp = urllib2.urlopen(url=self.__target_url, timeout=self.__timeout)
+        req = urllib2.Request(self.__target_url)
+        req.headers['Range'] = 'bytes=%d-%d' % (self.__downloaded_size, self.__target_size)
 
-        # Open the file for writing and invoke read_chunks.
-        with file(self.__target_file, "wb") as f:
-            self.__read_chunks(resp, f)
+        with closing(urllib2.urlopen(url=req, timeout=self.__timeout)) as resp:
+            # Open the file for writing and invoke read_chunks.
+            with file(self.__target_file, "wb") as f:
+                # Go to end of file
+                f.seek(0, 2)
+
+                # Start writing
+                self.__read_chunks(resp, f)
 
     def __read_chunks(self, resp, f):
         """
@@ -100,10 +162,9 @@ class DownloaderThread(threading.Thread):
             into f file object
         """
 
-        total_dl = 0
-        total_size = int(resp.info().getheader('Content-Length').strip())
+        total_size = self.__target_size
 
-        while self.__running and self.__presentage != 100:
+        while self.__running and self.downloaded != total_size:
             # Read the chunk
             chunk = resp.read(self.__chunk_size)
             if not chunk:
@@ -113,5 +174,4 @@ class DownloaderThread(threading.Thread):
             f.write(chunk)
 
             # Calc the presentage
-            total_dl += len(chunk)
-            self.__presentage = (total_dl * 100) / total_size
+            self.__downloaded_size += len(chunk)

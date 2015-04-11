@@ -12,18 +12,18 @@ from urlparse import urljoin
 
 class M3UDownloader(object):
     __PBAR_WIDGETS = ['Downloading: ', progressbar.Percentage(), ' ', progressbar.Bar(),
-                    ' ', progressbar.ETA()]
-#                    ' ', progressbar.ETA(), ' ', progressbar.FileTransferSpeed()]
+                    ' ', progressbar.ETA(), ' ', progressbar.FileTransferSpeed()]
+
+    __PBAR_PREPARE_WIDGETS = ['Preparing: ', progressbar.Percentage(), ' ', progressbar.Bar(), ' ', progressbar.ETA()]
 
     def __init__(self, target_url, target_dir, threads=15, verbose=True):
         self.__target_dir = os.path.realpath(target_dir)
         self.__target_url = target_url
         self.__index_file = os.path.join(self.__target_dir, "index.m3u8")
         self.__targets = []
+        self.__total_size = 0
         self.__verbose = verbose
         self.__max_threads = threads
-
-        print "Preparing to Download %s to %s" % (self.__target_url, self.__target_dir)
 
         # Prepare empty directory
         self.__prepare_directory()
@@ -57,10 +57,11 @@ class M3UDownloader(object):
 
         left_threads = self.__targets[:]
         active_threads = []
-        pbar = progressbar.ProgressBar(widgets=self.__PBAR_WIDGETS, maxval=len(self.__targets) * 100)
+        pbar = progressbar.ProgressBar(widgets=self.__PBAR_WIDGETS, maxval=self.__total_size)
 
         # Start progress bar
         if self.__verbose:
+            print "Downloading to %s" % (self.__target_dir)
             pbar.start()
 
         # Start iterate all threads till done.
@@ -73,7 +74,7 @@ class M3UDownloader(object):
 
             # Update progress bar
             if self.__verbose:
-                pbar.update(self.__total_presentage())
+                pbar.update(self.__total_downloaded())
 
             # Handling exceptions:
             for t in active_threads:
@@ -85,6 +86,9 @@ class M3UDownloader(object):
 
     def __total_presentage(self):
         return sum([i.presentage for i in self.__targets])
+
+    def __total_downloaded(self):
+        return sum([i.downloaded for i in self.__targets])
 
     def __prepare_directory(self):
         """ Makes sure we will start with empty directory """
@@ -107,15 +111,28 @@ class M3UDownloader(object):
             # Line contain filename
             url = urljoin(self.__target_url, line)
             target_file = os.path.join(self.__target_dir, line)
-            if os.path.isfile(target_file):
-                continue # Skip existing files
-            # TODO: Smarter check for resume downloading.
 
+            # Append to targets
             self.__targets.append(DownloaderThread(url, target_file))
+
+        # Preparing All targets
+        pbar = progressbar.ProgressBar(widgets=self.__PBAR_PREPARE_WIDGETS, maxval=len(self.__targets))
+        if self.__verbose:
+            print "Preparing to Download %s" % (self.__target_url)
+            pbar.start()
+
+        total_size = 0
+        for i, t in enumerate(self.__targets):
+            pbar.update(i)
+            t.prepare()
+            total_size += t.total_size
+
+        self.__total_size = total_size
 
     def __download_index(self):
         # Start a downloader thread for the index and wait until done
         d = DownloaderThread(self.__target_url, self.__index_file)
+        d.prepare()
         d.start()
         d.join()
         if d.exception:
