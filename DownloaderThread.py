@@ -110,7 +110,7 @@ class DownloaderThread(threading.Thread):
     @property
     def downloaded(self):
         return self.__downloaded_size
-
+    
     @property
     def total_size(self):
         assert self.__prepared, "Downloader was not prepared"

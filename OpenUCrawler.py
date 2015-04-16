@@ -18,7 +18,7 @@ class OpenUCrawler(object):
     __VIDEOS_LINK_RE = re.compile("href=\"(http:\/\/opal\.openu\.ac\.il\/mod\/ouvideo\/view\.php\?id=\d+)\"")
     __VIDEOS_RE_BASE = "href=\"(\/video\/redirect.php\?v=%(semester)s/.+?\.asx&c=c%(course)s)\""
     __UNAUTH_STR = "<form action=\"http://opal.openu.ac.il/index.php\" method=\"get\">"
-    __UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.76 Safari/537.36"
+    __UA = "Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.114 Mobile Safari/537.36"
     __REDIRECT_URL = "http://opal.openu.ac.il/auth/ouilsso/redirect2.php?urltogo="
     __LOGIN_PAGE = "https://sso.apps.openu.ac.il/login?T_PLACE=%s" % __REDIRECT_URL
     __LOGIN_FORM = "https://sso.apps.openu.ac.il/process"

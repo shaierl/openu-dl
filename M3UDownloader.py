@@ -123,7 +123,7 @@ class M3UDownloader(object):
 
         total_size = 0
         for i, t in enumerate(self.__targets):
-            pbar.update(i)
+            pbar.update(i+1)
             t.prepare()
             total_size += t.total_size
 
